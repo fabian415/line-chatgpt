@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .dialog {
+        background-color: #88cfa366;
+      }
+      .dialog .title {
+        font-weight: 700;
+      }
+      .dialog .user,
+      .dialog .assistant {
+        padding: 5px;
+      }
+      #question {
+        width: 500px;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <span>Question: </span>
+      <span><input id="question" type="text" value="你好嗎？" /></span>
+      <span><button id="submit">Submit</button></span>
+    </div>
+    <div class="dialog">
+      <!-- <div class="user">
+        <span class="title">User: </span><span>你好嗎？</span>
+      </div>
+      <div class="assistant">
+        <span class="title">Assistant: </span><span>我很好～～</span>
+      </div> -->
+    </div>
+  </body>
+  <script>
+    const submit = document.getElementById("submit");
+    const question = document.getElementById("question");
+    const dialog = document.getElementsByClassName("dialog")[0];
+    question.addEventListener("keyup", function (e) {
+      if (e.keyCode === 13) {
+        submit.click();
+      }
+    });
+    submit.addEventListener("click", function (event) {
+      const q = question.value.trim();
+      const randomId = `id-${new Date().getTime()}`;
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <div class="user">
+            <span class="title">User: </span><span>${q}</span>
+        </div>
+        <div class="assistant">
+            <span class="title">Assistant: </span><span id="${randomId}"></span>
+        </div>
+      `;
+      dialog.appendChild(div);
+      const assistant = dialog.querySelector("#" + randomId);
+
+      // 创建一个新的EventSource连接，指定服务器的URL
+      var source = new EventSource("/ask?question=" + q);
+      // 监听服务器的消息事件
+      source.onmessage = function (event) {
+        // 当服务器发送消息时，此函数会被调用
+        assistant.innerText += event.data;
+      };
+      // 监听open事件，服务器连接成功时触发
+      source.onopen = function (event) {
+        console.log("Connection opened:", event);
+      };
+      // 监听error事件，连接出错时触发
+      source.onerror = function (error) {
+        console.log("Error occurred:", error);
+      };
+      // 可以自定义事件类型的监听器
+      source.addEventListener("myevent", function (event) {
+        var data = JSON.parse(event.data);
+        console.log("Received custom event:", data);
+      });
+    });
+  </script>
+</html>
